@@ -1,68 +1,46 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Calendar, FileText } from "lucide-react";
 import { Link } from "react-router";
 import CreateButton from "../components/CreateButton";
+import Card from "../components/Card";
 
 const List = () => {
-  // 仮のデータ
-  const Notes = [
-    {
-      id: 1,
-      title: "First Note",
-      content: "This is the content of the first note.",
-      updatedAt: "2024-10-01T10:00:00Z",
-    },
-    {
-      id: 2,
-      title: "Second Note",
-      content: "This is the content of the second note.",
-      updatedAt: "2024-10-02T12:30:00Z",
-    },
-  ];
 
-  const formatDate = (dateString) => {
-    const options = { year: "numeric", month: "short", day: "numeric" };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-  };
+  const [Notes, setNotes] = React.useState([]);
+
+  useEffect(() => {
+    // データ取得
+    // データ取得　仮でLocalStorageから取得する形にする
+    const fetchNotes = () => {
+      const notes = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith("note_")) {
+          const note = JSON.parse(localStorage.getItem(key));
+          note.id = key.replace("note_", "");
+          notes.push(note);
+        }
+      }
+      // 更新日時でソート（降順）
+      notes.sort((a, b) => new Date(b.updateAt) - new Date(a.updateAt));
+      return notes;
+    };
+    const Note = fetchNotes();
+    setNotes(Note);
+
+  }, []);
+
   return (
     <div className="space-y-8">
-        <CreateButton onClick={() => {console.log("create")}} />
+        <CreateButton />
       <div className="space-y-3">
+        {Notes.length === 0 && (
+          <p className="text-gray-500 text-center">No notes available. Create a new note!</p>
+        )}
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {Notes.map((note) => (
-          <Link
-            key={note.id}
-            to={`/note/${note.id}`}
-            className="block bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md hover:border-green-200 transition-all duration-200 group"
-          >
-            <div className="space-y-3">
-              <div className="flex items-start justify-between">
-                <h3 className="text-lg font-semibold text-gray-900 group-hover:text-green-600 transition-colors flex-1 mr-4">
-                  {note.title || "Untitled"}
-                </h3>
-                <div className="flex items-center space-x-4 text-sm text-gray-500 whitespace-nowrap">
-                  <div className="flex items-center space-x-1">
-                    <Calendar className="h-4 w-4" />
-                    <span>{formatDate(note.updatedAt)}</span>
-                  </div>
-                </div>
-              </div>
-
-              {note.content && (
-                <p className="text-gray-600 line-clamp-2 text-sm leading-relaxed">
-                  {note.content}
-                </p>
-              )}
-
-              <div className="flex items-center justify-between pt-2">
-                <div className="flex items-center space-x-4 text-xs text-gray-500">
-                  <div className="flex items-center space-x-1">
-                    <FileText className="h-3 w-3" />
-                    <span>{note.content.length} characters</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Link>
+          <Card note={note} key={note.id}/>
         ))}
       </div>
     </div>
