@@ -14,7 +14,7 @@ const Card = ({note}) => {
     >
       <div className="space-y-3">
         <div className="flex items-start justify-between">
-          <h3 className="text-lg font-semibold text-gray-900 group-hover:text-green-600 transition-colors flex-1 mr-4">
+          <h3 className="text-lg font-semibold text-gray-900 group-hover:text-gray-600 transition-colors flex-1 mr-4">
             {note.title || "Untitled"}
           </h3>
           <div className="flex items-center space-x-4 text-sm text-gray-500 whitespace-nowrap">
