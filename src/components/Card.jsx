@@ -1,12 +1,9 @@
 import React from "react";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 import { Calendar, FileText } from "lucide-react";
+import { formatDate } from "../utils/date";
 
 const Card = ({note}) => {
-  const formatDate = (dateString) => {
-    const options = { year: "numeric", month: "short", day: "numeric" };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-  };
   return (
     <Link
       to={`/note/${note.id}`}
