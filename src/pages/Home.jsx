@@ -50,7 +50,9 @@ console.log(greeting);
         <p>This is the home page of the application.</p>
       </div>
       <CreateButton onClick={handleCreateNote}/>
-      <MarkdownViewer content={markdown} />
+      <div className="container mx-auto p-4">
+        <MarkdownViewer content={markdown} />
+      </div>
     </div>
   );
 };

@@ -1,51 +1,56 @@
 import React from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { usePath } from "../contexts/PathContext";
-import { Home, List, FileText } from "lucide-react";
+import { Home, List, FileText, ChevronsLeft, Menu} from "lucide-react";
 
 const Navigation = () => {
+  const [open, setOpen] = useState(true);
   const { currentPath } = usePath();
   const isActive = (path) => currentPath === path;
   return (
     <>
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-8">
-              <Link
-                to="/"
-                className="flex items-center space-x-2 text-xl font-bold text-gray-900 hover:text-gray-600 transition-colors"
+      <nav className={`bg-white border-r shadow-sm border-gray-200 fixed md:sticky top-0 z-50 h-screen flex flex-col justify-between ${(open ? "w-72" : "w-0")} transition-[width] duration-300 ease-in-out`}>
+        <div className="flex flex-col space-y-8 p-4">
+          <div className="flex gap-2 items-center w-full">
+            <div>
+              <div
+                onClick={() => setOpen(!open)}
+                className="p-2 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-green-500 cursor-pointer"
               >
-                <FileText className="h-6 w-6" />
-                <span>Loose Leaf</span>
-              </Link>
-
-              <div className="hidden sm:flex space-x-1">
-                <Link
-                  to="/"
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    isActive("/")
-                      ? "bg-green-50 text-green-700 shadow-sm"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                  }`}
-                >
-                  <Home className="h-4 w-4" />
-                  <span>Home</span>
-                </Link>
-
-                <Link
-                  to="/list"
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    isActive("/list")
-                      ? "bg-green-50 text-green-700 shadow-sm"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                  }`}
-                >
-                  <List className="h-4 w-4" />
-                  <span>All Notes</span>
-                </Link>
+                {open ? (<ChevronsLeft />) : (<Menu />)}
               </div>
             </div>
+            <div className={`flex items-center shrink-0 space-x-2 text-xl font-bold text-gray-900`}>
+              <FileText className="h-6 w-6" />
+              <span>Loose Leaf</span>
+            </div>
+          </div>
+
+          <div className={`${(open ? "flex" : "hidden")} flex-col space-y-1`}>
+            <Link
+              to="/"
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                isActive("/")
+                  ? "bg-green-50 text-green-700 shadow-sm"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+              }`}
+            >
+              <Home className="h-4 w-4" />
+              <span>Home</span>
+            </Link>
+
+            <Link
+              to="/list"
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                isActive("/list")
+                  ? "bg-green-50 text-green-700 shadow-sm"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+              }`}
+            >
+              <List className="h-4 w-4" />
+              <span>All Notes</span>
+            </Link>
           </div>
         </div>
       </nav>
