@@ -4,7 +4,7 @@ import Navigation from "./Navigation";
 const Layout = ({ children }) => {
   return (
     <>
-    <div className="w-full h-18 bg-white/30 fixed top-0 backdrop-blur-xl"></div>
+      <div className="w-full h-18 bg-white fixed top-0"></div>
       <div className="min-h-screen flex bg-white">
         <Navigation />
         {/* メインコンテンツ */}
