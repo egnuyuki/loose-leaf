@@ -55,8 +55,8 @@ const Note = () => {
         <h1 className="text-2xl font-bold">{note.title || "Untitled"}</h1>
 
         <div className="mt-6 text-sm text-gray-500">
-          {note.updatedAt ? (
-            <div>{formatDate(note.updatedAt)}</div>
+          { (note.updatedAt || note.updateAt) ? (
+            <div>{formatDate(note.updatedAt || note.updateAt)}</div>
           ) : (
             <div>{formatDate(note.createdAt)}</div>
           )}
@@ -64,7 +64,12 @@ const Note = () => {
       </div>
 
       <div className="prose max-w-none">
-        <MarkdownViewer content={note.content || ""} />
+        {/* Prefer markdown (md) saved with the note; fall back to string content if present */}
+        <MarkdownViewer content={
+          note.content && typeof note.content === 'object'
+            ? (note.content.md ?? '')
+            : (typeof note.content === 'string' ? note.content : '')
+        } />
       </div>
     </div>
   );

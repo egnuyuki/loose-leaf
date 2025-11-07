@@ -1,13 +1,17 @@
-import { useForm } from "react-hook-form";
+import React from 'react'
+import { useForm, Controller } from "react-hook-form";
 import { Save } from 'lucide-react';
+import Editor from "./Editor";
+import TurndownService from 'turndown';
 
 const Form = () => {
   const defaultValues = {
-    title: "",
+    title: "Untitled",
     content: "",
   };
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors },
     reset,
@@ -15,11 +19,57 @@ const Form = () => {
   } = useForm({ defaultValues });
   const contentValue = watch("content", "");
 
+  // helper: extract plain text from tiptap JSON format or from our value shape
+  const extractText = (node) => {
+    if (!node) return ''
+    // if value is an object with text/html/json fields
+    if (node.text && typeof node.text === 'string') return node.text
+    if (node.html && typeof node.html === 'string') return node.html.replace(/<[^>]+>/g, '')
+    const target = node.json ?? node
+    if (typeof target === 'string') return target
+    if (Array.isArray(target)) return target.map(extractText).join('')
+    let text = ''
+    if (target.text) text += target.text
+    if (target.content) text += target.content.map(extractText).join('')
+    return text
+  }
+
+  const contentTextLength = React.useMemo(() => {
+    try {
+      return extractText(contentValue).length
+    } catch (e) {
+      return 0
+    }
+  }, [contentValue])
+
   const onSubmit = (data) => {
     console.log(data);
+    // Convert content.html to Markdown for storage/display
+    const turndownService = new TurndownService();
+    let markdown = ''
+    if (data.content && data.content.html) {
+      markdown = turndownService.turndown(data.content.html)
+      console.log("markdown", markdown);
+    } else if (typeof data.content === 'string') {
+      markdown = data.content
+    } else {
+      // fallback: extract text
+      markdown = extractText(data.content)
+    }
+
+    const contentObj = {}
+    if (data.content && typeof data.content === 'object') {
+      contentObj.json = data.content.json ?? data.content
+      contentObj.html = data.content.html ?? null
+    } else if (typeof data.content === 'string') {
+      contentObj.json = null
+      contentObj.html = null
+    }
+    contentObj.md = markdown
+
     const formData = {
-      title: data.title,
-      content: data.content,
+      title: data.title || "Untitled",
+      content: contentObj,
       createdAt: new Date(),
       updateAt: new Date(),
     };
@@ -55,14 +105,25 @@ const Form = () => {
           )}
         </div>
         <div>
-          <textarea
-            className={`w-full text-lg bg-white rounded outline-none min-h-64 resize-none`}
-            maxLength="800"
-            placeholder="ここに800字以内で入力してください。"
-            {...register("content", {
-              required: "内容は必須です",
-            })}
-          ></textarea>
+          <Controller
+            name="content"
+            control={control}
+            defaultValue={defaultValues.content}
+            rules={{
+              validate: (v) => {
+                const len = extractText(v).length
+                return len <= 800 || '800文字以内で入力してください'
+              },
+            }}
+            render={({ field }) => (
+              <Editor
+                value={field.value?.json ?? field.value ?? ''}
+                onChange={(payload) => field.onChange(payload)}
+                placeholder="ここに800字以内で入力してください。"
+                maxLength={800}
+              />
+            )}
+          />
           {errors.content && (
             <p className="text-red-400">{errors.content.message}</p>
           )}
@@ -71,7 +132,7 @@ const Form = () => {
           {/* 文字数カウンター */}
           {/* 入力された文字数を表示 */}
           <p className="text-sm text-gray-500 text-right">
-            {(contentValue || "").length} / 800
+            {contentTextLength} / 800
           </p>
         </div>
       </div>

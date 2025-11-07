@@ -2,6 +2,7 @@ import React from "react";
 import { Plus, Leaf } from "lucide-react";
 import CreateButton from "../components/CreateButton";
 import MarkdownViewer from "../components/MarkdownViewer";
+import Editor from "../components/Editor";
 
 const Home = () => {
   const handleCreateNote = () => {
@@ -50,9 +51,10 @@ console.log(greeting);
         <p>This is the home page of the application.</p>
       </div>
       <CreateButton onClick={handleCreateNote}/>
-      <div className="container mx-auto p-4">
+      <Editor />
+      {/* <div className="container mx-auto p-4">
         <MarkdownViewer content={markdown} />
-      </div>
+      </div> */}
     </div>
   );
 };

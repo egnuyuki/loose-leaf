@@ -24,7 +24,7 @@ const Card = ({note}) => {
 
         {note.content && (
           <p className="text-gray-600 line-clamp-2 text-sm leading-relaxed truncate">
-            {note.content}
+            {note.content.json ? note.content.text : note.content}
           </p>
         )}
 
