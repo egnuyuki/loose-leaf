@@ -1,23 +1,12 @@
-import React from 'react'
-import { useForm, Controller } from "react-hook-form";
+import React, { useState } from 'react'
 import { Save } from 'lucide-react';
 import Editor from "./Editor";
 import TurndownService from 'turndown';
 
 const Form = () => {
-  const defaultValues = {
-    title: "Untitled",
-    content: "",
-  };
-  const {
-    register,
-    control,
-    handleSubmit,
-    formState: { errors },
-    reset,
-    watch,
-  } = useForm({ defaultValues });
-  const contentValue = watch("content", "");
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [errors, setErrors] = useState({});
 
   // helper: extract plain text from tiptap JSON format or from our value shape
   const extractText = (node) => {
@@ -36,39 +25,58 @@ const Form = () => {
 
   const contentTextLength = React.useMemo(() => {
     try {
-      return extractText(contentValue).length
+      return extractText(content).length
     } catch (e) {
       return 0
     }
-  }, [contentValue])
+  }, [content])
 
-  const onSubmit = (data) => {
-    console.log(data);
+  const reset = () => {
+    setTitle("");
+    setContent("");
+    setErrors({});
+  };
+
+  const onSubmit = () => {
+    const newErrors = {};
+    // if (!title.trim()) {
+    //   newErrors.title = "タイトルは必須です";
+    // }
+    const contentLength = extractText(content).length;
+    if (contentLength > 800) {
+      newErrors.content = "800文字以内で入力してください";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
     // Convert content.html to Markdown for storage/display
     const turndownService = new TurndownService();
     let markdown = ''
-    if (data.content && data.content.html) {
-      markdown = turndownService.turndown(data.content.html)
+    if (content && content.html) {
+      markdown = turndownService.turndown(content.html)
       console.log("markdown", markdown);
-    } else if (typeof data.content === 'string') {
-      markdown = data.content
+    } else if (typeof content === 'string') {
+      markdown = content
     } else {
       // fallback: extract text
-      markdown = extractText(data.content)
+      markdown = extractText(content)
     }
 
     const contentObj = {}
-    if (data.content && typeof data.content === 'object') {
-      contentObj.json = data.content.json ?? data.content
-      contentObj.html = data.content.html ?? null
-    } else if (typeof data.content === 'string') {
+    if (content && typeof content === 'object') {
+      contentObj.json = content.json ?? content
+      contentObj.html = content.html ?? null
+    } else if (typeof content === 'string') {
       contentObj.json = null
       contentObj.html = null
     }
     contentObj.md = markdown
 
     const formData = {
-      title: data.title || "Untitled",
+      title: title || "Untitled",
       content: contentObj,
       createdAt: new Date(),
       updateAt: new Date(),
@@ -84,7 +92,7 @@ const Form = () => {
         <Save className="text-gray-500"/>
         <button
           type="button"
-          onClick={handleSubmit(onSubmit)}
+          onClick={onSubmit}
           className="cursor-pointe text-gray-500 py-1 rounded-lg transition-all duration-200 transform hover:scale-105"
         >
           保存
@@ -96,33 +104,19 @@ const Form = () => {
           <input
             className={`w-full text-lg border-b border-gray-300 bg-white py-2 outline-none`}
             placeholder="Title"
-            {...register("title", {
-              required: "タイトルは必須です",
-            })}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
           />
           {errors.title && (
             <p className="text-red-400">{errors.title.message}</p>
           )}
         </div>
         <div>
-          <Controller
-            name="content"
-            control={control}
-            defaultValue={defaultValues.content}
-            rules={{
-              validate: (v) => {
-                const len = extractText(v).length
-                return len <= 800 || '800文字以内で入力してください'
-              },
-            }}
-            render={({ field }) => (
-              <Editor
-                value={field.value?.json ?? field.value ?? ''}
-                onChange={(payload) => field.onChange(payload)}
-                placeholder="ここに800字以内で入力してください。"
-                maxLength={800}
-              />
-            )}
+          <Editor
+            value={content.json ?? content ?? ''}
+            onChange={(payload) => setContent(payload)}
+            placeholder="ここに800字以内で入力してください。"
+            maxLength={800}
           />
           {errors.content && (
             <p className="text-red-400">{errors.content.message}</p>

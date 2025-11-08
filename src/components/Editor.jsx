@@ -4,7 +4,7 @@ import StarterKit from '@tiptap/starter-kit'
 
 // Editor is a controlled component: accepts `value` (tiptap JSON or HTML)
 // and calls `onChange` with the editor JSON on updates.
-const Editor = ({ value, onChange, placeholder, maxLength }) => {
+const Editor = ({ value, onChange }) => {
   const editor = useEditor({
     extensions: [StarterKit],
     content: (value && (value.json ?? value)) || '',
