@@ -1,41 +1,43 @@
-import React, { useState } from 'react'
-import { Save } from 'lucide-react';
+import React, { useState } from "react";
+import { Save } from "lucide-react";
 import Editor from "./Editor";
-import TurndownService from 'turndown';
+import TurndownService from "turndown";
 
-const Form = () => {
+const Form = ({ note }) => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [errors, setErrors] = useState({});
+  const [isEditing, setIsEditing] = useState(false);
+
+  if (note && !isEditing) {
+    setTitle(note.title || "Untitled");
+    setContent(note.content || "");
+    setIsEditing(true);
+  }
 
   // helper: extract plain text from tiptap JSON format or from our value shape
   const extractText = (node) => {
-    if (!node) return ''
+    if (!node) return "";
     // if value is an object with text/html/json fields
-    if (node.text && typeof node.text === 'string') return node.text
-    if (node.html && typeof node.html === 'string') return node.html.replace(/<[^>]+>/g, '')
-    const target = node.json ?? node
-    if (typeof target === 'string') return target
-    if (Array.isArray(target)) return target.map(extractText).join('')
-    let text = ''
-    if (target.text) text += target.text
-    if (target.content) text += target.content.map(extractText).join('')
-    return text
-  }
+    if (node.text && typeof node.text === "string") return node.text;
+    if (node.html && typeof node.html === "string")
+      return node.html.replace(/<[^>]+>/g, "");
+    const target = node.json ?? node;
+    if (typeof target === "string") return target;
+    if (Array.isArray(target)) return target.map(extractText).join("");
+    let text = "";
+    if (target.text) text += target.text;
+    if (target.content) text += target.content.map(extractText).join("");
+    return text;
+  };
 
   const contentTextLength = React.useMemo(() => {
     try {
-      return extractText(content).length
+      return extractText(content).length;
     } catch (e) {
-      return 0
+      return 0;
     }
-  }, [content])
-
-  const reset = () => {
-    setTitle("");
-    setContent("");
-    setErrors({});
-  };
+  }, [content]);
 
   const onSubmit = () => {
     const newErrors = {};
@@ -54,51 +56,61 @@ const Form = () => {
 
     // Convert content.html to Markdown for storage/display
     const turndownService = new TurndownService();
-    let markdown = ''
+    let markdown = "";
     if (content && content.html) {
-      markdown = turndownService.turndown(content.html)
+      markdown = turndownService.turndown(content.html);
       console.log("markdown", markdown);
-    } else if (typeof content === 'string') {
-      markdown = content
+    } else if (typeof content === "string") {
+      markdown = content;
     } else {
       // fallback: extract text
-      markdown = extractText(content)
+      markdown = extractText(content);
     }
 
-    const contentObj = {}
-    if (content && typeof content === 'object') {
-      contentObj.json = content.json ?? content
-      contentObj.html = content.html ?? null
-    } else if (typeof content === 'string') {
-      contentObj.json = null
-      contentObj.html = null
+    const contentObj = {};
+    if (content && typeof content === "object") {
+      contentObj.json = content.json ?? content;
+      contentObj.html = content.html ?? null;
+    } else if (typeof content === "string") {
+      contentObj.json = null;
+      contentObj.html = null;
     }
-    contentObj.md = markdown
+    contentObj.md = markdown;
 
     const formData = {
       title: title || "Untitled",
       content: contentObj,
-      createdAt: new Date(),
+      createdAt: note.createdAt || new Date(),
       updateAt: new Date(),
     };
-    localStorage.setItem("note_" + Date.now(), JSON.stringify(formData));
-    reset();
+
+    // Save to localStorage
+    // 編集モードなら既存のノートを更新、新規作成モードなら新しいIDで保存
+    if (isEditing && note.id) {
+      const noteId = `note_${note.id}`;
+      localStorage.setItem(noteId, JSON.stringify(formData));
+      location.href = `/note/${note.id}`;
+      return;
+    }
+    const noteId = `note_${Date.now()}`;
+    localStorage.setItem(noteId, JSON.stringify(formData));
+    location.href = `/note/${noteId.replace("note_", "")}`;
   };
 
   return (
     <>
-    <div className="flex justify-end">
-      <div className="flex items-center space-x-2 mb-2">
-        <Save className="text-gray-500"/>
-        <button
-          type="button"
-          onClick={onSubmit}
-          className="cursor-pointe text-gray-500 py-1 rounded-lg transition-all duration-200 transform hover:scale-105"
-        >
-          保存
-        </button>
+      <div className="flex justify-end">
+        <div className="flex items-center space-x-2 mb-2">
+          <Save className="text-gray-500" />
+          <button
+            type="button"
+            onClick={onSubmit}
+            className="cursor-pointe text-gray-500 py-1 rounded-lg transition-all duration-200 transform hover:scale-105"
+          >
+            保存
+          </button>
+        </div>
       </div>
-    </div>
       <div className="space-y-4 rounded-lg p-6 shadow-sm border border-gray-200 bg-white">
         <div>
           <input
@@ -113,7 +125,7 @@ const Form = () => {
         </div>
         <div>
           <Editor
-            value={content.json ?? content ?? ''}
+            value={content.json ?? content ?? ""}
             onChange={(payload) => setContent(payload)}
             placeholder="ここに800字以内で入力してください。"
             maxLength={800}

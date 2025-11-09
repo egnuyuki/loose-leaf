@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import List from "./pages/List";
 import Create from "./pages/Create";
 import Note from "./pages/Note";
+import Edit from "./pages/Edit";
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/list" element={<List />} />
         <Route path="/note/:id" element={<Note />} />
+        <Route path="/edit/:id" element={<Edit />} />
         <Route path="/create" element={<Create />} />
       </Routes>
     </Layout>
