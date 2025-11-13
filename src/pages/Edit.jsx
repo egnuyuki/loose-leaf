@@ -1,6 +1,6 @@
-import { ChevronsLeft, Link } from "lucide-react";
+import { ChevronsLeft } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import Form from "../components/Form";
 
 const Edit = () => {
