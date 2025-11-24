@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { ChevronsLeft, Save } from "lucide-react";
 import Editor from "./Editor";
-import TurndownService from "turndown";
 import { Link } from "react-router-dom";
 
 const Form = ({ note }) => {
@@ -16,37 +15,11 @@ const Form = ({ note }) => {
     setIsEditing(true);
   }
 
-  // helper: extract plain text from tiptap JSON format or from our value shape
-  const extractText = (node) => {
-    if (!node) return "";
-    // if value is an object with text/html/json fields
-    if (node.text && typeof node.text === "string") return node.text;
-    if (node.html && typeof node.html === "string")
-      return node.html.replace(/<[^>]+>/g, "");
-    const target = node.json ?? node;
-    if (typeof target === "string") return target;
-    if (Array.isArray(target)) return target.map(extractText).join("");
-    let text = "";
-    if (target.text) text += target.text;
-    if (target.content) text += target.content.map(extractText).join("");
-    return text;
-  };
-
-  const contentTextLength = React.useMemo(() => {
-    try {
-      return extractText(content).length;
-    } catch (e) {
-      return 0;
-    }
-  }, [content]);
+  const contentTextLength = content.length;
 
   const onSubmit = () => {
     const newErrors = {};
-    // if (!title.trim()) {
-    //   newErrors.title = "タイトルは必須です";
-    // }
-    const contentLength = extractText(content).length;
-    if (contentLength > 800) {
+    if (content.length > 800) {
       newErrors.content = "800文字以内で入力してください";
     }
 
@@ -55,59 +28,37 @@ const Form = ({ note }) => {
       return;
     }
 
-    // Convert content.html to Markdown for storage/display
-    const turndownService = new TurndownService();
-    let markdown = "";
-    if (content && content.html) {
-      markdown = turndownService.turndown(content.html);
-      console.log("markdown", markdown);
-    } else if (typeof content === "string") {
-      markdown = content;
-    } else {
-      // fallback: extract text
-      markdown = extractText(content);
-    }
-
-    const contentObj = {};
-    if (content && typeof content === "object") {
-      contentObj.json = content.json ?? content;
-      contentObj.html = content.html ?? null;
-    } else if (typeof content === "string") {
-      contentObj.json = null;
-      contentObj.html = null;
-    }
-    contentObj.md = markdown;
-
     const formData = {
       title: title || "Untitled",
-      content: contentObj,
-      createdAt: note.createdAt || new Date(),
+      content: content,
       updateAt: new Date(),
     };
 
     // Save to localStorage
     // 編集モードなら既存のノートを更新、新規作成モードなら新しいIDで保存
+    formData.createdAt = new Date();
+    console.log("Form submitted:", formData);
+    const noteId = `note_${Date.now()}`;
+    console.log("Saving note with ID:", noteId);
+
     if (isEditing && note.id) {
+      formData.createdAt = note.createdAt;
       const noteId = `note_${note.id}`;
       localStorage.setItem(noteId, JSON.stringify(formData));
       location.href = `/note/${note.id}`;
       return;
+    } else {
+      formData.createdAt = new Date();
+      const noteId = `note_${Date.now()}`;
+      localStorage.setItem(noteId, JSON.stringify(formData));
+      location.href = `/note/${noteId.replace("note_", "")}`;
+      return;
     }
-    const noteId = `note_${Date.now()}`;
-    localStorage.setItem(noteId, JSON.stringify(formData));
-    location.href = `/note/${noteId.replace("note_", "")}`;
   };
 
   return (
-    <div className="container mx-auto">
-      <div className="flex justify-between items-center">
-        <Link
-          to={note.id ? `/note/${note.id}` : "/list"}
-          className="text-sm mb-3 w-fit flex items-center text-gray-500 hover:text-gray-700"
-        >
-          <ChevronsLeft />
-          Back
-        </Link>
+    <>
+      <div className="flex justify-end">
         <div className="flex items-center space-x-2 mb-2">
           <Save className="text-gray-500" />
           <button
@@ -132,15 +83,8 @@ const Form = ({ note }) => {
           )}
         </div>
         <div>
-          <Editor
-            value={content.json ?? content ?? ""}
-            onChange={(payload) => setContent(payload)}
-            placeholder="ここに800字以内で入力してください。"
-            maxLength={800}
-          />
-          {errors.content && (
-            <p className="text-red-400">{errors.content.message}</p>
-          )}
+          <Editor value={content} setValue={setContent} />
+          {errors.content && <p className="text-red-400">{errors.content}</p>}
         </div>
         <div>
           {/* 文字数カウンター */}
@@ -150,7 +94,7 @@ const Form = ({ note }) => {
           </p>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

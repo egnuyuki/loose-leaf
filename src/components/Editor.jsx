@@ -1,43 +1,47 @@
-import React, { useEffect } from 'react'
-import { useEditor, EditorContent } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
+const Editor = ({value, setValue}) => {
 
-// Editor is a controlled component: accepts `value` (tiptap JSON or HTML)
-// and calls `onChange` with the editor JSON on updates.
-const Editor = ({ value, onChange }) => {
-  const editor = useEditor({
-    extensions: [StarterKit],
-    content: (value && (value.json ?? value)) || '',
-    editorProps: {
-      attributes: {
-        class: 'focus:outline-none w-full text-lg bg-white rounded outline-none min-h-64 resize-none',
-      },
-    },
-    onUpdate: ({ editor }) => {
-      if (onChange) {
-        onChange({ json: editor.getJSON(), text: editor.getText(), html: editor.getHTML() })
-      }
-    },
-  })
+  const handleKeyDown = (event) => {
+    // Tabキーが押され、かつCtrl/Alt/Shiftキーが同時に押されていないことを確認
+    if (
+      event.key === "Tab" &&
+      !event.ctrlKey &&
+      !event.altKey &&
+      !event.shiftKey
+    ) {
+      event.preventDefault(); // ブラウザのデフォルトのフォーカス移動動作を無効化
 
-  // Keep editor content in sync when parent value changes
-  useEffect(() => {
-    if (!editor) return
-    // allow empty string to clear the editor; only skip when value is null/undefined
-    if (value === undefined || value === null) return
-    const content = value.json ?? value
-    try {
-      const current = editor.getJSON()
-      if (JSON.stringify(current) !== JSON.stringify(content)) {
-        editor.commands.setContent(content)
-      }
-    } catch (e) {
-      // ignore invalid content
-      console.error("Failed to set editor content:", e)
+      const { selectionStart, selectionEnd, value } = event.target;
+
+      // 現在のカーソル位置にタブ文字を挿入
+      const newValue =
+        value.substring(0, selectionStart) +
+        "\t" +
+        value.substring(selectionEnd);
+
+      // 新しい値でstateを更新
+      setValue(newValue);
+
+      // カーソル位置をタブ文字の直後に移動させる
+      // 注意: Reactのstate更新は非同期のため、setTimeoutで実行するか、
+      // useRefなどを使って要素に直接アクセスし、更新後のDOMに対してキャレット位置を設定する必要があります。
+      // より堅牢な方法として、ここではDOM要素のプロパティを直接操作する方法を採用します。
+      // Reactでは非推奨の場合もありますが、このケースでは一般的です。
+      event.target.selectionStart = event.target.selectionEnd =
+        selectionStart + 1;
     }
-  }, [value, editor])
+  };
 
-  return <EditorContent editor={editor} />
-}
+  return (
+    <>
+      <textarea
+        onKeyDown={handleKeyDown}
+        className="focus:outline-none w-full text-lg outline-none min-h-128 resize-none"
+        value={value || ""}
+        onChange={(e) => setValue(e.target.value)}
+        rows={12}
+      />
+    </>
+  );
+};
 
-export default Editor
+export default Editor;

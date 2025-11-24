@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { formatDate } from "../utils/date";
 import { ChevronsLeft, ChevronsRight } from "lucide-react";
 import MarkdownViewer from "../components/MarkdownViewer";
@@ -76,11 +74,7 @@ const Note = () => {
 
       <div className="prose max-w-none">
         {/* Prefer markdown (md) saved with the note; fall back to string content if present */}
-        <MarkdownViewer content={
-          note.content && typeof note.content === 'object'
-            ? (note.content.md ?? '')
-            : (typeof note.content === 'string' ? note.content : '')
-        } />
+        <MarkdownViewer content={note.content } />
       </div>
     </div>
   );

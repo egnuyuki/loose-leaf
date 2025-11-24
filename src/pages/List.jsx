@@ -1,6 +1,4 @@
 import React, { useEffect } from "react";
-import { Calendar, FileText } from "lucide-react";
-import { Link } from "react-router";
 import CreateButton from "../components/CreateButton";
 import Card from "../components/Card";
 
